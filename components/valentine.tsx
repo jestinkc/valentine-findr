@@ -82,6 +82,12 @@ export default function Valentine() {
   ];
 
   useEffect(() => {
+    // Don't reset page if already on confirmation or celebration
+    if (page === 'confirmation' || page === 'celebration') {
+      document.body.style.overflow = 'hidden';
+      return;
+    }
+
     // Check if we're on proposal page with valid params
     if (yourName && crushName && yourName.length >= 2 && crushName.length >= 2) {
       setPage('proposal');
@@ -89,7 +95,6 @@ export default function Valentine() {
       document.body.style.overflow = 'hidden';
     } else if (yourName || crushName) {
       // Invalid params
-      setPage('landing');
       setPage('landing');
       setError('Oops! Looks like the link is missing something. Let\'s create a new one!');
       setTimeout(() => {
@@ -101,7 +106,7 @@ export default function Valentine() {
 
     // Prevent navigation
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (page === 'proposal' || page === 'celebration') {
+      if (page === 'proposal' || page === 'celebration' || page === 'confirmation') {
         e.preventDefault();
         e.returnValue = '';
       }
@@ -742,29 +747,63 @@ export default function Valentine() {
 
   // Confirmation Screen - Clean YES moment
   if (page === 'confirmation') {
+    // Generate celebration URL
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const celebrationUrl = `${baseUrl}/celebrate?from=${encodeURIComponent(yourName || '')}&to=${encodeURIComponent(crushName || '')}`;
+    const shareMessage = `Your crush accepted your Valentine proposal 💖\nBest wishes to ${yourName} and ${crushName} on this special Valentine's Day! 🌹\n\n${celebrationUrl}`;
+
+    const handleCopyCelebrationLink = () => {
+      navigator.clipboard.writeText(celebrationUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleShareWhatsAppCelebration = () => {
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    };
+
+    const handleSystemShare = async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Valentine Proposal Accepted! 💖',
+            text: `Your crush accepted your Valentine proposal 💖\nBest wishes to ${yourName} and ${crushName} on this special Valentine's Day! 🌹`,
+            url: celebrationUrl
+          });
+        } catch (err) {
+          console.log('Share cancelled or not supported');
+        }
+      } else {
+        // Fallback to copy
+        handleCopyCelebrationLink();
+      }
+    };
+
     return (
       <div
         className="fixed inset-0 flex items-center justify-center overflow-hidden"
         style={{ 
           background: 'radial-gradient(ellipse at center, #8d4575 0%, #5c2d52 40%, #3d1f3d 70%, #241828 100%)',
           cursor: 'default',
-          animation: 'fadeIn 0.5s ease-out'
+          animation: 'fadeIn 0.5s ease-out',
+          overflowY: 'auto'
         }}
       >
-        {/* Soft glow - slightly brighter */}
+        {/* Subtle glow */}
         <div className="fixed inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(circle at center, rgba(251, 113, 133, 0.2) 0%, rgba(236, 72, 153, 0.12) 25%, transparent 55%)',
-          filter: 'blur(80px)'
+          background: 'radial-gradient(circle at center, rgba(251, 113, 133, 0.1) 0%, rgba(236, 72, 153, 0.05) 25%, transparent 55%)',
+          filter: 'blur(90px)'
         }} />
         
-        {/* Vignette */}
+        {/* Minimal vignette */}
         <div className="fixed inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.3) 80%, rgba(0,0,0,0.5) 100%)'
+          background: 'radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0.35) 100%)'
         }} />
 
-        {/* Content - gentle fade + scale */}
+        {/* Content - minimal and clean */}
         <div 
-          className="relative z-10 text-center max-w-2xl px-6"
+          className="relative z-10 text-center w-full max-w-xl px-6 py-8"
           style={{
             animation: 'fadeIn 0.8s ease-out 0.3s backwards, scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards'
           }}
@@ -773,10 +812,10 @@ export default function Valentine() {
           <h1 
             style={{ 
               fontFamily: '\'Playfair Display\', serif',
-              fontSize: 'clamp(3rem, 8vw, 5rem)',
+              fontSize: 'clamp(2rem, 6vw, 3.5rem)',
               fontWeight: '600',
-              marginBottom: '2rem',
-              color: 'rgba(254, 205, 211, 0.98)',
+              marginBottom: '1.25rem',
+              color: 'rgba(254, 205, 211, 0.95)',
               letterSpacing: '-0.02em',
               lineHeight: '1.1'
             }}
@@ -787,29 +826,29 @@ export default function Valentine() {
           {/* Subtext */}
           <p 
             style={{
-              fontSize: 'clamp(1.25rem, 3vw, 1.75rem)',
+              fontSize: 'clamp(1rem, 2.25vw, 1.35rem)',
               fontWeight: '300',
-              color: 'rgba(255, 255, 255, 0.85)',
+              color: 'rgba(255, 255, 255, 0.8)',
               lineHeight: '1.5',
-              marginBottom: '0.75rem'
+              marginBottom: '0.4rem'
             }}
           >
             <span style={{ 
               fontFamily: '\'Playfair Display\', serif',
               fontStyle: 'italic',
-              fontWeight: '500',
+              fontWeight: '400',
               color: '#fda4af'
             }}>{crushName}</span> just made
           </p>
 
           <p 
             style={{
-              fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
+              fontSize: 'clamp(1.125rem, 3vw, 1.75rem)',
               fontFamily: '\'Playfair Display\', serif',
               fontStyle: 'italic',
               fontWeight: '600',
               color: '#fecdd3',
-              marginBottom: '0.75rem'
+              marginBottom: '0.4rem'
             }}
           >
             {yourName}
@@ -817,27 +856,157 @@ export default function Valentine() {
 
           <p 
             style={{
-              fontSize: 'clamp(1.125rem, 2.5vw, 1.5rem)',
+              fontSize: 'clamp(0.9375rem, 2vw, 1.2rem)',
               fontWeight: '300',
-              color: 'rgba(255, 255, 255, 0.8)'
+              color: 'rgba(255, 255, 255, 0.75)',
+              marginBottom: '2rem'
             }}
           >
-            the happiest person 🥹❤️
+            the happiest person ❤️
           </p>
+
+          {/* Share this moment section - minimal style */}
+          <div 
+            style={{
+              animation: 'fadeIn 0.8s ease-out 1s backwards',
+              marginTop: '2.5rem'
+            }}
+          >
+            <p 
+              style={{
+                fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                fontWeight: '400',
+                marginBottom: '0.75rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                letterSpacing: '0.01em'
+              }}
+            >
+              Share this moment
+            </p>
+
+            {/* Celebration URL Display */}
+            <div 
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '0.5rem',
+                padding: '0.75rem',
+                marginBottom: '0.75rem',
+                fontSize: 'clamp(0.7rem, 1.8vw, 0.8rem)',
+                color: 'rgba(255, 255, 255, 0.7)',
+                wordBreak: 'break-all',
+                textAlign: 'center',
+                fontFamily: 'monospace'
+              }}
+            >
+              {celebrationUrl}
+            </div>
+
+            {/* Sharing Buttons - Minimal */}
+            <div 
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+                maxWidth: '280px',
+                margin: '0 auto'
+              }}
+            >
+              {/* Copy Link Button */}
+              <button
+                onClick={handleCopyCelebrationLink}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 1rem',
+                  background: copied 
+                    ? 'rgba(34, 197, 94, 0.2)' 
+                    : 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '0.5rem',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: 'clamp(0.8125rem, 1.8vw, 0.875rem)',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(4px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = copied ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = copied ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+                }}
+              >
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+
+              {/* WhatsApp Share Button */}
+              <button
+                onClick={handleShareWhatsAppCelebration}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 1rem',
+                  background: 'rgba(37, 211, 102, 0.15)',
+                  border: '1px solid rgba(37, 211, 102, 0.25)',
+                  borderRadius: '0.5rem',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: 'clamp(0.8125rem, 1.8vw, 0.875rem)',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(4px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(37, 211, 102, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(37, 211, 102, 0.15)';
+                }}
+              >
+                Share on WhatsApp
+              </button>
+
+              {/* System Share Button */}
+              <button
+                onClick={handleSystemShare}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 1rem',
+                  background: 'rgba(250, 90, 90, 0.15)',
+                  border: '1px solid rgba(250, 90, 90, 0.25)',
+                  borderRadius: '0.5rem',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: 'clamp(0.8125rem, 1.8vw, 0.875rem)',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(4px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(250, 90, 90, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(250, 90, 90, 0.15)';
+                }}
+              >
+                Share via System Share
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Slow appearing hearts */}
+        {/* Minimal floating hearts */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <div
               key={`conf-heart-${i}`}
               className="absolute"
               style={{
-                left: `${20 + Math.random() * 60}%`,
-                top: `${30 + Math.random() * 40}%`,
-                fontSize: `${1.5 + Math.random() * 1}rem`,
-                animation: `fadeIn ${2 + i * 0.5}s ease-out ${1 + i * 0.8}s backwards`,
-                opacity: 0.3,
+                left: `${30 + Math.random() * 40}%`,
+                top: `${35 + Math.random() * 30}%`,
+                fontSize: `${1.2 + Math.random() * 0.5}rem`,
+                animation: `fadeIn ${2.5 + i * 0.8}s ease-out ${1.5 + i * 1}s backwards`,
+                opacity: 0.15,
                 color: '#fda4af'
               }}
             >
