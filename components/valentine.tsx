@@ -1,0 +1,979 @@
+'use client';
+
+import React from "react"
+
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+
+export default function Valentine() {
+  const searchParams = useSearchParams();
+  const yourName = searchParams.get('from');
+  const crushName = searchParams.get('to');
+
+  const [page, setPage] = useState<'landing' | 'proposal' | 'celebration' | 'confirmation'>('landing');
+  const [stage, setStage] = useState<1 | 2 | 3>(1); // Stage for progressive reveal
+  const [yourNameInput, setYourNameInput] = useState('');
+  const [crushNameInput, setCrushNameInput] = useState('');
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [noButtonPos, setNoButtonPos] = useState({ x: 0, y: 0 });
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const noButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Hydration fix: Store random values in state
+  const [landingHearts, setLandingHearts] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
+  const [proposalHearts, setProposalHearts] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
+  const [proposalSparkles, setProposalSparkles] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
+  const [celebrationHearts, setCelebrationHearts] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
+  const [greeting, setGreeting] = useState('');
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    // Set greeting based on client time
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+
+    setLandingHearts([...Array(5)].map((_, i) => ({
+      left: Math.random() * 100 + '%',
+      top: Math.random() * 100 + '%',
+      duration: `${4 + i}s`,
+      delay: `${i * 0.5}s`
+    })));
+
+    setProposalHearts([...Array(8)].map((_, i) => ({
+      left: Math.random() * 100 + '%',
+      top: Math.random() * 100 + '%',
+      duration: `${5 + i}s`,
+      delay: `${i * 0.6}s`
+    })));
+
+    setProposalSparkles([...Array(12)].map((_, i) => ({
+      left: Math.random() * 100 + '%',
+      top: Math.random() * 100 + '%',
+      duration: `${4 + i}s`,
+      delay: `${i * 0.4}s`
+    })));
+
+    setCelebrationHearts([...Array(15)].map((_, i) => ({
+      left: Math.random() * 100 + '%',
+      top: Math.random() * 100 + '%',
+      duration: `${6 + i}s`,
+      delay: `${i * 0.4}s`
+    })));
+
+    setProposalSparkles([...Array(4)].map((_, i) => ({
+      left: `${15 + Math.random() * 70}%`,
+      top: `${20 + Math.random() * 60}%`,
+      duration: `${12 + i * 3}s`,
+      delay: `${i * 5}s`
+    })));
+  }, []);
+
+  const funnyMessages = [
+    "Nope! Try again 😏",
+    "Wrong choice 👀",
+    "Come on… you know it's YES 💕",
+    "Not happening today 😂",
+    "Very funny 🙃",
+    "Nice try! 😉"
+  ];
+
+  useEffect(() => {
+    // Check if we're on proposal page with valid params
+    if (yourName && crushName && yourName.length >= 2 && crushName.length >= 2) {
+      setPage('proposal');
+      setStage(1); // Start at stage 1
+      document.body.style.overflow = 'hidden';
+    } else if (yourName || crushName) {
+      // Invalid params
+      setPage('landing');
+      setPage('landing');
+      setError('Oops! Looks like the link is missing something. Let\'s create a new one!');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } else {
+      setPage('landing');
+    }
+
+    // Prevent navigation
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (page === 'proposal' || page === 'celebration') {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [yourName, crushName, page]);
+
+  const handleGenerateLink = () => {
+    setError('');
+
+    if (yourNameInput.length < 2 || yourNameInput.length > 20) {
+      setError('Your name must be 2-20 characters');
+      return;
+    }
+    if (crushNameInput.length < 2 || crushNameInput.length > 20) {
+      setError('Crush name must be 2-20 characters');
+      return;
+    }
+
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const link = `${baseUrl}?from=${encodeURIComponent(yourNameInput)}&to=${encodeURIComponent(crushNameInput)}`;
+    setGeneratedLink(link);
+  };
+
+  const handleNextStage = () => {
+    if (stage < 3) {
+      setStage((prev) => (prev + 1) as 1 | 2 | 3);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (generatedLink) {
+      navigator.clipboard.writeText(generatedLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    if (generatedLink) {
+      const message = `Hey! I have something special for you 💖 ${generatedLink}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  };
+
+  const handleWebShare = async () => {
+    if (generatedLink && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Valentine Proposal 💖',
+          text: 'I have something special for you!',
+          url: generatedLink
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      handleCopyLink();
+    }
+  };
+
+  const handleShareSuccess = async () => {
+    const message = `Best wishes to ${yourName} and ${crushName} on this special Valentine's Day! 🌹`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Valentine Success! 💖',
+          text: message
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      navigator.clipboard.writeText(message);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleShareSuccessWhatsApp = () => {
+    const message = `Best wishes to ${yourName} and ${crushName} on this special Valentine's Day! 🌹`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const moveNoButton = () => {
+    if (!noButtonRef.current) return;
+
+    const button = noButtonRef.current;
+    const rect = button.getBoundingClientRect();
+
+    // Subtle movement - just enough to cause a "miss"
+    const margin = 40;
+    const maxX = window.innerWidth - rect.width - margin;
+    const maxY = window.innerHeight - rect.height - margin;
+
+    // Move to a nearby position (not too far - feels like mis-tap)
+    const currentX = noButtonPos.x;
+    const currentY = noButtonPos.y;
+
+    // Larger random offset (80-140px away) - more noticeable movement
+    const offsetDistance = 80 + Math.random() * 60;
+    const angle = Math.random() * Math.PI * 2;
+
+    let newX = currentX + Math.cos(angle) * offsetDistance;
+    let newY = currentY + Math.sin(angle) * offsetDistance;
+
+    // Keep within bounds
+    newX = Math.min(Math.max(margin, newX), maxX);
+    newY = Math.min(Math.max(margin, newY), maxY);
+
+    // Single state update - no loops, no delays
+    setNoButtonPos({ x: newX, y: newY });
+  };
+
+  const handleNoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Instant movement - no delay, no lag
+    moveNoButton();
+  };
+
+  const handleYesClick = () => {
+    // Freeze current scene and show confirmation
+    setPage('confirmation');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const createConfetti = () => {
+    const confettiContainer = document.getElementById('confetti-container');
+    if (!confettiContainer) return;
+
+    // Create soft glowing particles instead of aggressive confetti
+    for (let i = 0; i < 25; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'confetto';
+      particle.innerHTML = '💖';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.fontSize = `${1.5 + Math.random() * 1}rem`;
+      particle.style.animation = `glow-rise ${4 + Math.random() * 3}s ease-out forwards`;
+      particle.style.animationDelay = Math.random() * 1.5 + 's';
+      particle.style.filter = 'blur(0.5px)';
+      confettiContainer.appendChild(particle);
+
+      // Remove after animation
+      setTimeout(() => particle.remove(), 8000);
+    }
+  };
+
+
+  // Landing Page
+  if (page === 'landing') {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden" style={{
+        background: 'linear-gradient(180deg, #8b3a62 0%, #a84c74 25%, #c9658a 50%, #b55578 75%, #9d4569 100%)',
+        cursor: 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgOC41QzIwIDUgMTYuNSAxIDEzIDFDMTEgMSA5IDIgOCA0QzYgMiA0IDEgMiAxQzAgNSA0IDEwIDggMTNDNCAxNiAwIDIwIDAgMjBDMCAyMCAyIDIyIDQgMjJDNiAyMiA4IDIwIDggMThDOCAyMCAxMCAyMiAxMiAyMkMxNCAyMiAxNiAyMCAxNiAxOEMxNiAyMCAxOCAyMiAyMCAyMkMyMiAyMiAyNCAyMCAyNCAyMEM yNCAyMCAyMCAxNiAyMCA4LjVWOC41WiIgZmlsbD0iI0ZBNUE1QSIvPjwvc3ZnPg==") 12 12, auto'
+      }}>
+        {/* Pink center glow */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at center, rgba(250, 120, 150, 0.3) 0%, rgba(250, 90, 120, 0.15) 40%, transparent 65%)',
+          filter: 'blur(100px)'
+        }} />
+
+        {/* Pink love light source - lower center */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at 50% 65%, rgba(250, 90, 90, 0.12) 0%, rgba(250, 90, 90, 0.06) 30%, transparent 55%)',
+          filter: 'blur(90px)',
+          mixBlendMode: 'soft-light'
+        }} />
+
+        {/* Noise texture overlay */}
+        <div className="fixed inset-0 opacity-[0.012] pointer-events-none" style={{
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")',
+          backgroundRepeat: 'repeat'
+        }} />
+
+        {/* Vignette */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.35) 100%)'
+        }} />
+        <div className="w-full max-w-md relative z-10">
+          {/* Title */}
+          <div className="text-center mb-10 animate-fadeIn" style={{ animation: 'fadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            <h1 className="text-5xl md:text-6xl font-bold mb-4" style={{
+              fontFamily: '\'Playfair Display\', serif',
+              background: 'linear-gradient(135deg, #FA5A5A 0%, #ff8a8a 50%, #FA5A5A 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '0.02em'
+            }}>
+              Send a <span style={{fontStyle: 'italic'}}>Valentine</span>
+            </h1>
+            <p className="text-lg font-light" style={{color: 'rgba(255, 255, 255, 0.7)'}}>They can't refuse 💘</p>
+          </div>
+
+          {/* Glassmorphism Card */}
+          <div
+            className="backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-10 md:p-12 relative"
+            style={{
+              background: 'linear-gradient(135deg, rgba(40, 60, 140, 0.65) 0%, rgba(50, 70, 160, 0.62) 50%, rgba(60, 80, 170, 0.6) 100%)',
+              animation: 'slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 60px rgba(50, 80, 180, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.15), inset 0 0 40px rgba(80, 120, 220, 0.12)',
+              border: '1px solid rgba(100, 150, 255, 0.25)'
+            }}
+          >
+
+
+            {/* Input Fields */}
+            <div className="space-y-5 mb-8">
+              <div>
+                <label className="text-sm font-medium mb-2 block tracking-wide" style={{color: 'rgba(255, 255, 255, 0.85)'}}>Your Name</label>
+                <input
+                  type="text"
+                  maxLength={20}
+                  value={yourNameInput}
+                  onChange={(e) => setYourNameInput(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-5 py-3.5 bg-slate-800/50 border border-slate-700/50 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-pink-400/50 focus:ring-2 focus:ring-pink-500/20 transition-all duration-300 backdrop-blur-sm"
+                  style={{
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.03)'
+                  }}
+                />
+                <div className="text-xs text-slate-400 mt-2">{yourNameInput.length}/20</div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block tracking-wide" style={{color: 'rgba(255, 255, 255, 0.85)'}}>Crush's Name</label>
+                <input
+                  type="text"
+                  maxLength={20}
+                  value={crushNameInput}
+                  onChange={(e) => setCrushNameInput(e.target.value)}
+                  placeholder="Enter their name"
+                  className="w-full px-5 py-3.5 bg-slate-800/50 border border-slate-700/50 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-pink-400/50 focus:ring-2 focus:ring-pink-500/20 transition-all duration-300 backdrop-blur-sm"
+                  style={{
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.03)'
+                  }}
+                />
+                <div className="text-xs text-slate-400 mt-2">{crushNameInput.length}/20</div>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="text-rose-300 text-sm text-center mb-5 bg-rose-900/20 p-3 rounded-xl border border-rose-500/20 animate-pulse backdrop-blur-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Generate Button */}
+            <button
+              onClick={handleGenerateLink}
+              className="w-full py-4 text-white font-semibold rounded-2xl transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] mb-6"
+              style={{
+                background: 'linear-gradient(135deg, rgba(250, 90, 90, 0.85) 0%, rgba(250, 110, 110, 0.8) 100%)',
+                animation: 'slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s backwards',
+                boxShadow: '0 4px 20px rgba(250, 90, 90, 0.3), 0 0 40px rgba(250, 90, 90, 0.15)',
+                border: '1px solid rgba(250, 90, 90, 0.3)'
+              }}
+            >
+              Generate <span style={{fontStyle: 'italic', fontFamily: '\'Playfair Display\', serif'}}>Valentine</span> Link ❤️
+            </button>
+
+
+
+            {/* Share Section - Always Visible After Link Generation */}
+            {generatedLink && (
+              <div className="animate-slideUp" style={{ animation: 'slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                {/* Section Title */}
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-semibold" style={{color: '#FA5A5A'}}>Share your Valentine link 💌</h3>
+                </div>
+                
+                {/* Generated Link Display */}
+                <div className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-4 mb-4 backdrop-blur-sm">
+                  <div className="text-xs font-medium mb-2" style={{color: 'rgba(255, 255, 255, 0.6)'}}>Your Valentine link:</div>
+                  <div className="text-sm break-all" style={{color: 'rgba(255, 255, 255, 0.9)'}}>
+                    {generatedLink}
+                  </div>
+                </div>
+                
+                {/* Share Buttons Grid */}
+                <div className="space-y-3">
+                  <button
+                    onClick={handleCopyLink}
+                    className="w-full py-3.5 rounded-xl transition-all duration-300 text-sm font-medium backdrop-blur-sm transform hover:scale-[1.02] hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    style={{
+                      background: copied ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(22, 163, 74, 0.8) 100%)' : 'rgba(255, 255, 255, 0.15)',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      color: 'rgba(255, 255, 255, 0.95)',
+                      boxShadow: copied ? '0 0 20px rgba(34, 197, 94, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <span style={{fontSize: '1.2rem'}}>{copied ? '✅' : '📋'}</span>
+                    <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleShareWhatsApp}
+                    className="w-full py-3.5 rounded-xl transition-all duration-300 text-sm font-medium backdrop-blur-sm transform hover:scale-[1.02] hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.85) 0%, rgba(22, 163, 74, 0.85) 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: 'rgba(255, 255, 255, 0.98)',
+                      boxShadow: '0 2px 12px rgba(37, 211, 102, 0.3)'
+                    }}
+                  >
+                    <span style={{fontSize: '1.2rem'}}>💚</span>
+                    <span>Share on WhatsApp</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleWebShare}
+                    className="w-full py-3.5 rounded-xl transition-all duration-300 text-sm font-medium backdrop-blur-sm transform hover:scale-[1.02] hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(250, 90, 90, 0.85) 0%, rgba(236, 72, 153, 0.85) 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: 'rgba(255, 255, 255, 0.98)',
+                      boxShadow: '0 2px 12px rgba(250, 90, 90, 0.3)'
+                    }}
+                  >
+                    <span style={{fontSize: '1.2rem'}}>📱</span>
+                    <span>Share via Instagram / More</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Privacy Note */}
+
+          </div>
+
+          {/* Floating Hearts Background */}
+          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            {landingHearts.map((heart, i) => (
+              <div
+                key={i}
+                className="absolute"
+                style={{
+                  left: heart.left,
+                  top: heart.top,
+                  animation: `float-organic ${15 + (i * 3)}s ease-in-out infinite`,
+                  animationDelay: heart.delay,
+                  opacity: 0.15 + (i * 0.02),
+                  fontSize: `${1.8 + (i * 0.25)}rem`,
+                  filter: 'blur(0.3px)',
+                  color: '#FA5A5A'
+                }}
+              >
+                ♥
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Proposal Page
+  if (page === 'proposal') {
+    return (
+      <div
+        className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden"
+        style={{
+          background: 'linear-gradient(180deg, #8b3a62 0%, #a84c74 25%, #c9658a 50%, #b55578 75%, #9d4569 100%)',
+          cursor: 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgOC41QzIwIDUgMTYuNSAxIDEzIDFDMTEgMSA5IDIgOCA0QzYgMiA0IDEgMiAxQzAgNSA0IDEwIDggMTNDNCAxNiAwIDIwIDAgMjBDMCAyMCAyIDIyIDQgMjJDNiAyMiA4IDIwIDggMThDOCAyMCAxMCAyMiAxMiAyMkMxNCAyMiAxNiAyMCAxNiAxOEMxNiAyMCAxOCAyMiAyMCAyMkMyMiAyMiAyNCAyMCAyNCAyMEM yNCAyMCAyMCAxNiAyMCA4LjVWOC41WiIgZmlsbD0iI0ZBNUE1QSIvPjwvc3ZnPg==") 12 12, auto'
+        }}
+      >
+        {/* Strong pink center glow */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse at center, rgba(250, 120, 150, 0.4) 0%, rgba(250, 90, 120, 0.25) 30%, rgba(200, 80, 120, 0.15) 50%, transparent 70%)',
+          filter: 'blur(120px)',
+          animation: 'ambient-light-shift 30s ease-in-out infinite'
+        }} />
+
+        {/* Pink love light source - lower center */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at 50% 65%, rgba(255, 100, 130, 0.35) 0%, rgba(250, 90, 110, 0.2) 30%, transparent 55%)',
+          filter: 'blur(100px)'
+        }} />
+
+        {/* Additional pink warmth - top right */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at 80% 20%, rgba(250, 110, 140, 0.25) 0%, transparent 40%)',
+          filter: 'blur(80px)'
+        }} />
+
+        {/* Very subtle film grain texture */}
+        <div className="fixed inset-0 opacity-[0.012] pointer-events-none mix-blend-overlay" style={{
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")',
+          backgroundRepeat: 'repeat'
+        }} />
+
+        {/* Vignette - darker edges for depth */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.35) 100%)'
+        }} />
+
+        {/* Glassmorphism Card Container */}
+        <div
+          className="relative z-10 text-center max-w-md w-full"
+          style={{
+            animation: 'slideUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}
+        >
+          {/* Soft ambient glow around card */}
+          <div className="absolute inset-0 -z-10" style={{
+            background: 'radial-gradient(circle at center, rgba(50, 63, 138, 0.3) 0%, rgba(80, 100, 180, 0.15) 40%, transparent 70%)',
+            filter: 'blur(60px)',
+            transform: 'scale(1.4)'
+          }} />
+
+          {/* Premium Glass Card with Embossed Details - Blue-Pink Blend */}
+          <div
+            className="relative backdrop-blur-md rounded-[2rem] p-12"
+            style={{
+              background: 'linear-gradient(135deg, rgba(40, 60, 140, 0.7) 0%, rgba(50, 70, 160, 0.68) 50%, rgba(60, 80, 170, 0.65) 100%)',
+              border: '1px solid rgba(100, 150, 255, 0.3)',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 60px rgba(50, 80, 180, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)',
+              animation: 'breathing-glow-blue 8s ease-in-out infinite',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Embossed Floral Pattern - Top Left */}
+            <div className="absolute top-0 left-0 w-32 h-32 opacity-20 pointer-events-none" style={{
+              background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)',
+              filter: 'blur(1px)',
+              mixBlendMode: 'overlay'
+            }} />
+
+            {/* Embossed Floral Pattern - Bottom Right */}
+            <div className="absolute bottom-0 right-0 w-40 h-40 opacity-15 pointer-events-none" style={{
+              background: 'radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.12) 0%, transparent 55%)',
+              filter: 'blur(1.5px)',
+              mixBlendMode: 'overlay'
+            }} />
+
+            {/* Inner glow effect - Blue glass accent */}
+            <div className="absolute inset-0 rounded-[2rem] pointer-events-none" style={{
+              boxShadow: 'inset 0 0 80px rgba(80, 120, 220, 0.25), inset 0 0 40px rgba(100, 140, 240, 0.15)',
+              opacity: 0.8
+            }} />
+
+            {/* Content */}
+            <div className="relative z-10">
+              {/* STAGE 1 - Greeting only */}
+              {stage === 1 && (
+                <div 
+                  onClick={handleNextStage}
+                  className="cursor-pointer"
+                  style={{
+                    animation: 'fadeIn 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards'
+                  }}
+                >
+                  <h2
+                    className="text-2xl md:text-3xl"
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.95)',
+                      fontWeight: '300',
+                      letterSpacing: '0.01em',
+                      fontFamily: '\'Inter\', sans-serif'
+                    }}
+                  >
+                    <span style={{ color: '#FA5A5A', fontWeight: '500', fontFamily: '\'Playfair Display\', serif' }}>{greeting || 'Hello'}</span>, <span style={{
+                      fontFamily: '\'Playfair Display\', serif',
+                      fontWeight: '500',
+                      fontStyle: 'italic',
+                      color: '#ffc9d4'
+                    }}>{crushName}</span>
+                  </h2>
+                  
+                  <p className="text-sm mt-8 opacity-50" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Tap to continue
+                  </p>
+                </div>
+              )}
+
+              {/* STAGE 2 - Emotional buildup */}
+              {stage === 2 && (
+                <div 
+                  onClick={handleNextStage}
+                  className="cursor-pointer"
+                  style={{
+                    animation: 'fadeIn 1.2s ease-out'
+                  }}
+                >
+                  <p
+                    className="text-lg md:text-xl leading-relaxed"
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontWeight: '300',
+                      letterSpacing: '0.005em'
+                    }}
+                  >
+                    <span style={{
+                      fontWeight: '400',
+                      color: '#ffb3c1'
+                    }}>{yourName}</span> wanted to ask you something <span style={{ color: '#FA5A5A', fontWeight: '400' }}>special</span>
+                  </p>
+                  
+                  <p className="text-sm mt-8 opacity-50" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    Tap to continue
+                  </p>
+                </div>
+              )}
+
+              {/* STAGE 3 - The question with buttons */}
+              {stage === 3 && (
+                <div style={{
+                  animation: 'fadeIn 1.2s ease-out'
+                }}>
+                  <h1
+                    className="text-4xl md:text-5xl font-medium mb-20 leading-snug"
+                    style={{
+                      fontFamily: '\'Playfair Display\', serif',
+                      color: '#ffffff',
+                      letterSpacing: '-0.01em',
+                      textShadow: '0 2px 20px rgba(250, 90, 90, 0.25), 0 0 40px rgba(255, 255, 255, 0.08)'
+                    }}
+                  >
+                    {crushName}, will you be my <span style={{ color: '#FA5A5A', fontStyle: 'italic', fontWeight: '600' }}>Valentine</span>?
+                  </h1>
+
+                  {/* Buttons - refined */}
+                  <div className="flex gap-3 justify-center" style={{ marginBottom: '1rem' }}>
+                    {/* YES - strong presence with gentle pulse */}
+                    <button
+                      onClick={handleYesClick}
+                      style={{
+                        padding: '0.9rem 2.25rem',
+                        background: 'linear-gradient(135deg, rgba(250, 90, 90, 0.92) 0%, rgba(250, 110, 110, 0.88) 100%)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '0.75rem',
+                        color: 'rgba(255, 255, 255, 0.98)',
+                        fontSize: '0.9375rem',
+                        fontWeight: '500',
+                        letterSpacing: '0.025em',
+                        cursor: 'pointer',
+                        transition: 'all 0.4s ease',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 0 30px rgba(250, 90, 90, 0.35), 0 4px 15px rgba(0, 0, 0, 0.2)',
+                        animation: 'yes-button-pulse 6s ease-in-out infinite'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                        e.currentTarget.style.boxShadow = '0 0 40px rgba(250, 90, 90, 0.5), 0 6px 20px rgba(0, 0, 0, 0.25)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 0 30px rgba(250, 90, 90, 0.35), 0 4px 15px rgba(0, 0, 0, 0.2)';
+                      }}
+                    >
+                      Yes
+                    </button>
+
+                    {/* NO - same size, moves only on click */}
+                    <button
+                      ref={noButtonRef}
+                      onClick={handleNoClick}
+                      style={{
+                        padding: '0.9rem 2.25rem',
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        borderRadius: '0.75rem',
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        fontSize: '0.9375rem',
+                        fontWeight: '500',
+                        letterSpacing: '0.025em',
+                        cursor: 'pointer',
+                        transition: 'none',
+                        backdropFilter: 'blur(10px)',
+                        position: noButtonPos.x !== 0 || noButtonPos.y !== 0 ? 'fixed' : 'relative',
+                        left: noButtonPos.x !== 0 || noButtonPos.y !== 0 ? 0 : 'auto',
+                        top: noButtonPos.x !== 0 || noButtonPos.y !== 0 ? 0 : 'auto',
+                        transform: noButtonPos.x !== 0 || noButtonPos.y !== 0 ? `translate(${noButtonPos.x}px, ${noButtonPos.y}px)` : 'none',
+                        zIndex: 50
+                      }}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Floating hearts - minimal organic pink accents */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          {proposalHearts.slice(0, 3).map((heart, i) => (
+            <div
+              key={`prop-heart-${i}`}
+              className="absolute"
+              style={{
+                left: heart.left,
+                top: heart.top,
+                fontSize: i === 0 ? '1.75rem' : i === 1 ? '1.5rem' : '1.6rem',
+                animation: `float-organic ${18 + i * 6}s ease-in-out infinite`,
+                animationDelay: `${i * 4}s`,
+                filter: 'blur(0.3px)',
+                opacity: i === 1 ? 0.25 : 0.2,
+                color: '#FA5A5A'
+              }}
+            >
+              ♥
+            </div>
+          ))}
+
+          {/* Soft sparkles - occasional gentle twinkles */}
+          {proposalSparkles.slice(0, 3).map((sparkle, i) => (
+            <div
+              key={`sparkle-${i}`}
+              className="absolute"
+              style={{
+                left: sparkle.left,
+                top: sparkle.top,
+                fontSize: '1.1rem',
+                animation: `float-organic ${sparkle.duration} ease-in-out infinite`,
+                animationDelay: sparkle.delay,
+                filter: 'blur(0.5px)',
+                opacity: 0.18,
+                color: '#FA5A5A'
+              }}
+            >
+              ✨
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Confirmation Screen - Clean YES moment
+  if (page === 'confirmation') {
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center overflow-hidden"
+        style={{ 
+          background: 'radial-gradient(ellipse at center, #8d4575 0%, #5c2d52 40%, #3d1f3d 70%, #241828 100%)',
+          cursor: 'default',
+          animation: 'fadeIn 0.5s ease-out'
+        }}
+      >
+        {/* Soft glow - slightly brighter */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at center, rgba(251, 113, 133, 0.2) 0%, rgba(236, 72, 153, 0.12) 25%, transparent 55%)',
+          filter: 'blur(80px)'
+        }} />
+        
+        {/* Vignette */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.3) 80%, rgba(0,0,0,0.5) 100%)'
+        }} />
+
+        {/* Content - gentle fade + scale */}
+        <div 
+          className="relative z-10 text-center max-w-2xl px-6"
+          style={{
+            animation: 'fadeIn 0.8s ease-out 0.3s backwards, scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards'
+          }}
+        >
+          {/* Main message */}
+          <h1 
+            style={{ 
+              fontFamily: '\'Playfair Display\', serif',
+              fontSize: 'clamp(3rem, 8vw, 5rem)',
+              fontWeight: '600',
+              marginBottom: '2rem',
+              color: 'rgba(254, 205, 211, 0.98)',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.1'
+            }}
+          >
+            Yayyy! 💖
+          </h1>
+
+          {/* Subtext */}
+          <p 
+            style={{
+              fontSize: 'clamp(1.25rem, 3vw, 1.75rem)',
+              fontWeight: '300',
+              color: 'rgba(255, 255, 255, 0.85)',
+              lineHeight: '1.5',
+              marginBottom: '0.75rem'
+            }}
+          >
+            <span style={{ 
+              fontFamily: '\'Playfair Display\', serif',
+              fontStyle: 'italic',
+              fontWeight: '500',
+              color: '#fda4af'
+            }}>{crushName}</span> just made
+          </p>
+
+          <p 
+            style={{
+              fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
+              fontFamily: '\'Playfair Display\', serif',
+              fontStyle: 'italic',
+              fontWeight: '600',
+              color: '#fecdd3',
+              marginBottom: '0.75rem'
+            }}
+          >
+            {yourName}
+          </p>
+
+          <p 
+            style={{
+              fontSize: 'clamp(1.125rem, 2.5vw, 1.5rem)',
+              fontWeight: '300',
+              color: 'rgba(255, 255, 255, 0.8)'
+            }}
+          >
+            the happiest person 🥹❤️
+          </p>
+        </div>
+
+        {/* Slow appearing hearts */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={`conf-heart-${i}`}
+              className="absolute"
+              style={{
+                left: `${20 + Math.random() * 60}%`,
+                top: `${30 + Math.random() * 40}%`,
+                fontSize: `${1.5 + Math.random() * 1}rem`,
+                animation: `fadeIn ${2 + i * 0.5}s ease-out ${1 + i * 0.8}s backwards`,
+                opacity: 0.3,
+                color: '#fda4af'
+              }}
+            >
+              💖
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Celebration Page
+  if (page === 'celebration') {
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center overflow-hidden"
+        style={{
+          background: 'linear-gradient(180deg, #a84c74 0%, #c9658a 30%, #d47a9e 50%, #c9658a 70%, #a84c74 100%)',
+          cursor: 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgOC41QzIwIDUgMTYuNSAxIDEzIDFDMTEgMSA5IDIgOCA0QzYgMiA0IDEgMiAxQzAgNSA0IDEwIDggMTNDNCAxNiAwIDIwIDAgMjBDMCAyMCAyIDIyIDQgMjJDNiAyMiA4IDIwIDggMThDOCAyMCAxMCAyMiAxMiAyMkMxNCAyMiAxNiAyMCAxNiAxOEMxNiAyMCAxOCAyMiAyMCAyMkMyMiAyMiAyNCAyMCAyNCAyMEM yNCAyMCAyMCAxNiAyMCA4LjVWOC41WiIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPg==") 12 12, auto',
+          transition: 'background 2s ease-out'
+        }}
+      >
+        {/* Soft center glow */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(circle at center, rgba(251, 113, 133, 0.15) 0%, transparent 60%)',
+          filter: 'blur(80px)',
+          animation: 'fadeIn 2s ease-out'
+        }} />
+
+        {/* Film grain */}
+        <div className="fixed inset-0 opacity-[0.015] pointer-events-none" style={{
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")',
+          backgroundRepeat: 'repeat'
+        }} />
+        {/* Confetti Container */}
+        <div id="confetti-container" className="fixed inset-0 pointer-events-none" />
+
+        {/* Content */}
+        <div
+          className="relative z-10 text-center max-w-2xl px-4"
+          style={{
+            animation: 'fadeIn 2s cubic-bezier(0.34, 1.56, 0.64, 1), heartbeat-pulse 5s ease-in-out 3s infinite'
+          }}
+        >
+          <h1
+            className="text-5xl md:text-6xl font-medium mb-10"
+            style={{
+              fontFamily: '\'Playfair Display\', serif',
+              color: 'rgba(254, 205, 211, 0.95)',
+              textShadow: '0 2px 20px rgba(251, 113, 133, 0.3)',
+              letterSpacing: '-0.005em'
+            }}
+          >
+            They said yes
+          </h1>
+
+          <p className="text-xl md:text-2xl mb-6" style={{
+            color: 'rgba(255, 255, 255, 0.82)',
+            fontWeight: '300'
+          }}>
+            You just made
+          </p>
+
+          <p
+            className="text-4xl md:text-5xl mb-8 font-medium"
+            style={{
+              fontFamily: '\'Playfair Display\', serif',
+              fontStyle: 'italic',
+              color: '#fda4af',
+              textShadow: '0 2px 15px rgba(251, 113, 133, 0.25)'
+            }}
+          >
+            {yourName}
+          </p>
+
+          <p className="text-lg md:text-xl" style={{
+            color: 'rgba(255, 255, 255, 0.75)',
+            fontWeight: '300'
+          }}>
+            the happiest person alive
+          </p>
+
+          {/* Music Toggle */}
+          <button
+            onClick={() => {
+              setMusicPlaying(!musicPlaying);
+              if (audioRef.current) {
+                if (!musicPlaying) {
+                  audioRef.current.play();
+                } else {
+                  audioRef.current.pause();
+                }
+              }
+            }}
+            className="mt-8 px-6 py-3 bg-white/20 hover:bg-white/30 border border-white/40 text-white font-semibold rounded-xl transition-all backdrop-blur-sm"
+          >
+            {musicPlaying ? '🎵 Music On' : '🔇 Music Off'}
+          </button>
+
+          {/* Social Sharing */}
+          <div className="mt-8 space-y-3">
+            <button
+              onClick={() => {
+                const text = `${yourName} just got me to say yes! 💕 Try your own Valentine proposal: `;
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text + window.location.origin)}`, '_blank');
+              }}
+              className="w-full max-w-xs mx-auto block px-6 py-3 bg-white/20 hover:bg-white/30 border border-white/40 text-white font-semibold rounded-xl transition-all backdrop-blur-sm"
+            >
+              Share on Twitter/X
+            </button>
+          </div>
+        </div>
+
+        {/* Floating Hearts - Continuous Animation */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          {celebrationHearts.map((heart, i) => (
+            <div
+              key={i}
+              className="absolute text-5xl opacity-30"
+              style={{
+                left: heart.left,
+                top: heart.top,
+                animation: `float ${heart.duration} ease-in-out infinite`,
+                animationDelay: heart.delay
+              }}
+            >
+              ❤️
+            </div>
+          ))}
+        </div>
+
+        {/* Hidden Audio Element */}
+        <audio ref={audioRef} src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" />
+      </div>
+    );
+  }
+
+  return null;
+}
