@@ -1238,11 +1238,11 @@ export default function Valentine() {
               onClick={() => handleOpenGift('letter')}
               className="group relative flex flex-col items-center"
             >
-              <div className={`w-32 h-32 md:w-40 md:h-40 bg-white/10 rounded-2xl shadow-xl flex items-center justify-center transition-all border-4 ${openedGifts.includes('letter') ? 'border-white bg-white/20' : 'border-white/50'} overflow-hidden p-4`}>
+              <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center transition-all bg-transparent">
                 <img
                   src={openedGifts.includes('letter') ? "/img/env open.png" : "/img/env close.png"}
                   alt="Gift 1"
-                  className="w-full h-full object-contain drop-shadow-lg transition-all duration-500"
+                  className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                 />
               </div>
               <span className="mt-3 font-medium text-white/90 bg-black/20 px-3 py-1 rounded-full text-sm backdrop-blur-sm">Surprise Gift 1</span>
@@ -1255,11 +1255,11 @@ export default function Valentine() {
               onClick={() => handleOpenGift('song')}
               className="group relative flex flex-col items-center"
             >
-              <div className={`w-32 h-32 md:w-40 md:h-40 bg-white/10 rounded-2xl shadow-xl flex items-center justify-center transition-all border-4 ${openedGifts.includes('song') ? 'border-white bg-white/20' : 'border-white/50'} overflow-hidden p-4`}>
+              <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center transition-all bg-transparent">
                 <img
                   src={openedGifts.includes('song') ? "/img/env open.png" : "/img/env close.png"}
                   alt="Gift 2"
-                  className="w-full h-full object-contain drop-shadow-lg transition-all duration-500"
+                  className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                 />
               </div>
               <span className="mt-3 font-medium text-white/90 bg-black/20 px-3 py-1 rounded-full text-sm backdrop-blur-sm">Surprise Gift 2</span>
@@ -1272,11 +1272,11 @@ export default function Valentine() {
               onClick={() => handleOpenGift('ticket')}
               className="group relative flex flex-col items-center"
             >
-              <div className={`w-32 h-32 md:w-40 md:h-40 bg-white/10 rounded-2xl shadow-xl flex items-center justify-center transition-all border-4 ${openedGifts.includes('ticket') ? 'border-white bg-white/20' : 'border-white/50'} overflow-hidden p-4`}>
+              <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center transition-all bg-transparent">
                 <img
                   src={openedGifts.includes('ticket') ? "/img/env open.png" : "/img/env close.png"}
                   alt="Gift 3"
-                  className="w-full h-full object-contain drop-shadow-lg transition-all duration-500"
+                  className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                 />
               </div>
               <span className="mt-3 font-medium text-white/90 bg-black/20 px-3 py-1 rounded-full text-sm backdrop-blur-sm">Surprise Gift 3</span>
