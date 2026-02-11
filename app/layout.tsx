@@ -45,10 +45,10 @@ export default function RootLayout({
           <img
             src="/img/logo.png"
             alt="Hive Logo"
-            className="h-12 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+            className="h-16 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
           />
           <span
-            className="text-white text-3xl tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+            className="text-yellow-400 text-xl tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
             style={{ fontFamily: 'Impact, sans-serif' }}
           >
             HIVE
