@@ -1395,8 +1395,8 @@ export default function Valentine() {
                 <span className="text-2xl">🎵</span>
               </div>
               <div>
-                <h3 className="font-bold text-sm">Love Song</h3>
-                <p className="text-xs text-white/60">For You</p>
+                <h3 className="font-bold text-sm">Blue</h3>
+                <p className="text-xs text-white/60">Young Kai</p>
               </div>
               <div className="flex gap-1 h-4 items-end ml-4">
                 {[1, 2, 3, 4, 5].map(i => (
