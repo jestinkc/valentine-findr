@@ -8,12 +8,12 @@ const _geist = Geist({ subsets: ['latin'] })
 const _geistMono = Geist_Mono({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Valentine Proposal - Send Your Love',
+  title: 'Hive Valentine Proposal - Send Your Love',
   description: 'Create a beautiful, playful Valentine proposal with a custom link. Will they say yes?',
   generator: 'v0.app',
   keywords: ['valentine', 'proposal', 'love', 'romantic'],
   openGraph: {
-    title: 'Valentine Proposal',
+    title: 'Hive Valentine Proposal',
     description: 'Someone sent you a Valentine they can\'t refuse',
     type: 'website',
     url: 'https://valentine-proposal.vercel.app',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Valentine Proposal',
+    title: 'Hive Valentine Proposal',
     description: 'Someone sent you a Valentine proposal - will they say yes?',
   },
 }
@@ -39,7 +39,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {/* Persistent Branding */}
+        <div className="fixed top-6 left-6 z-[100] flex items-center gap-3 pointer-events-none select-none mix-blend-plus-lighter">
+          <img
+            src="/img/logo.png"
+            alt="Hive Logo"
+            className="h-12 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+          />
+          <span
+            className="text-white text-3xl tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+            style={{ fontFamily: 'Impact, sans-serif' }}
+          >
+            HIVE
+          </span>
+        </div>
+        {children}
+      </body>
     </html>
   )
 }
