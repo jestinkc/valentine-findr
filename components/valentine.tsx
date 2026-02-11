@@ -1202,6 +1202,7 @@ export default function Valentine() {
             <img
               src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDdtZ2JiZDR0a3B0YnhzbmZ0Zzh4YnhzbmZ0Zzh4YnhzbmZ0Zzh4YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26BRv0ThflsHCqDrG/giphy.gif"
               alt="Celebration"
+              loading="lazy"
               className="w-full h-auto object-cover"
             />
           </motion.div>
@@ -1242,6 +1243,7 @@ export default function Valentine() {
                 <img
                   src={openedGifts.includes('letter') ? "/img/env open.png" : "/img/env close.png"}
                   alt="Gift 1"
+                  loading="lazy"
                   className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                 />
               </div>
@@ -1259,6 +1261,7 @@ export default function Valentine() {
                 <img
                   src={openedGifts.includes('song') ? "/img/env open.png" : "/img/env close.png"}
                   alt="Gift 2"
+                  loading="lazy"
                   className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                 />
               </div>
@@ -1276,6 +1279,7 @@ export default function Valentine() {
                 <img
                   src={openedGifts.includes('ticket') ? "/img/env open.png" : "/img/env close.png"}
                   alt="Gift 3"
+                  loading="lazy"
                   className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                 />
               </div>
@@ -1314,6 +1318,7 @@ export default function Valentine() {
                 <img
                   src="/img/image.png"
                   alt="Love Letter"
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
 
@@ -1367,8 +1372,8 @@ export default function Valentine() {
                   <div className="flex items-center justify-center gap-3 text-left">
                     <span className="text-4xl">🍽️</span>
                     <div>
-                      <div className="font-bold text-slate-800">One Special Date Night</div>
-                      <div className="text-slate-500 text-sm">Valid Forever • Non-Transferable</div>
+                      <div className="font-bold text-slate-800">Canteen at 4:00 PM</div>
+                      <div className="text-slate-500 text-sm">Valid for Today Only</div>
                     </div>
                   </div>
                 </div>
