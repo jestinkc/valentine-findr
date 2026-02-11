@@ -23,7 +23,6 @@ export default function Valentine() {
   const [landingHearts, setLandingHearts] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
   const [proposalHearts, setProposalHearts] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
   const [proposalSparkles, setProposalSparkles] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
-  const [celebrationHearts, setCelebrationHearts] = useState<Array<{ left: string, top: string, duration: string, delay: string }>>([]);
   const [greeting, setGreeting] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -60,12 +59,7 @@ export default function Valentine() {
       delay: `${i * 0.4}s`
     })));
 
-    setCelebrationHearts([...Array(15)].map((_, i) => ({
-      left: Math.random() * 100 + '%',
-      top: Math.random() * 100 + '%',
-      duration: `${6 + i}s`,
-      delay: `${i * 0.4}s`
-    })));
+
 
     setProposalSparkles([...Array(4)].map((_, i) => ({
       left: `${15 + Math.random() * 70}%`,
@@ -247,34 +241,7 @@ export default function Valentine() {
 
 
 
-  const createConfetti = () => {
-    const confettiContainer = document.getElementById('confetti-container');
-    if (!confettiContainer) return;
 
-    // Create soft glowing particles instead of aggressive confetti
-    for (let i = 0; i < 25; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'confetto';
-      particle.innerHTML = '💖';
-      particle.style.left = Math.random() * 100 + '%';
-      particle.style.fontSize = `${1.5 + Math.random() * 1}rem`;
-      particle.style.animation = `glow-rise ${4 + Math.random() * 3}s ease-out forwards`;
-      particle.style.animationDelay = Math.random() * 1.5 + 's';
-      particle.style.filter = 'blur(0.5px)';
-      confettiContainer.appendChild(particle);
-
-      // Remove after animation
-      setTimeout(() => particle.remove(), 8000);
-    }
-  };
-
-  useEffect(() => {
-    if (page === 'celebration') {
-      const timer = setInterval(createConfetti, 1000);
-      createConfetti(); // Initial burst
-      return () => clearInterval(timer);
-    }
-  }, [page]);
 
 
   // Landing Page
@@ -1098,38 +1065,7 @@ export default function Valentine() {
           ))}
         </div>
 
-        {/* Extra Celebration Emojis */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-20">
-          {[].map((emoji, i) => (
-            <motion.div
-              key={`emoji-${i}`}
-              initial={{
-                left: `${Math.random() * 90}%`,
-                top: '110%',
-                scale: 0.5,
-                rotate: 0
-              }}
-              animate={{
-                top: '-10%',
-                rotate: 360,
-                scale: [0.5, 1.2, 0.8]
-              }}
-              transition={{
-                duration: 8 + Math.random() * 5,
-                delay: i * 0.8,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              className="absolute text-4xl"
-              style={{
-                fontSize: `${2 + Math.random()}rem`,
-                filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.3))'
-              }}
-            >
-              {emoji}
-            </motion.div>
-          ))}
-        </div>
+
       </div >
     );
   }
@@ -1185,8 +1121,6 @@ export default function Valentine() {
           backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")',
           backgroundRepeat: 'repeat'
         }} />
-        {/* Confetti Container */}
-        <div id="confetti-container" className="fixed inset-0 pointer-events-none" />
 
         {/* Content Container */}
         <div className="relative z-10 w-full max-w-4xl px-4 flex flex-col items-center justify-center h-full overflow-y-auto py-10">
@@ -1287,16 +1221,6 @@ export default function Valentine() {
             </motion.button>
           </div>
 
-          {/* Social Sharing (Bottom) */}
-          <button
-            onClick={() => {
-              const text = `${yourName} just got me to say yes! 💕 Try your own Valentine proposal: `;
-              window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text + window.location.origin)}`, '_blank');
-            }}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/30 text-white/80 font-medium rounded-xl transition-all backdrop-blur-sm text-sm"
-          >
-            Share on Twitter/X
-          </button>
         </div>
 
         {/* MODALS */}
@@ -1419,23 +1343,6 @@ export default function Valentine() {
         )}
 
 
-        {/* Floating Hearts - Continuous Animation */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden h-full z-0">
-          {celebrationHearts.map((heart, i) => (
-            <div
-              key={i}
-              className="absolute text-5xl opacity-30"
-              style={{
-                left: heart.left,
-                top: heart.top,
-                animation: `float ${heart.duration} ease-in-out infinite`,
-                animationDelay: heart.delay
-              }}
-            >
-              ❤️
-            </div>
-          ))}
-        </div>
 
         {/* Audio Element */}
         <audio ref={audioRef} loop>
