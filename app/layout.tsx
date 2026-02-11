@@ -41,14 +41,14 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased">
         {/* Persistent Branding */}
-        <div className="fixed top-6 left-6 z-[100] flex items-center gap-3 pointer-events-none select-none mix-blend-plus-lighter">
+        <div className="fixed top-6 left-6 z-[100] flex items-center gap-3 pointer-events-none select-none">
           <img
             src="/img/logo.png"
             alt="Hive Logo"
-            className="h-16 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+            className="h-16 w-auto drop-shadow-[0_0_15px_rgba(236,72,153,0.5)]"
           />
           <span
-            className="text-yellow-400 text-xl tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+            className="text-pink-500 text-xl font-medium tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
             style={{ fontFamily: 'Impact, sans-serif' }}
           >
             HIVE

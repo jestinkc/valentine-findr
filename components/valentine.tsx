@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion";
+import { motion, useSpring } from "framer-motion";
 import { useSearchParams } from 'next/navigation';
 
 export default function Valentine() {
@@ -14,7 +14,12 @@ export default function Valentine() {
   const [yourNameInput, setYourNameInput] = useState('');
   const [crushNameInput, setCrushNameInput] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
-  const [noButtonPos, setNoButtonPos] = useState({ x: 0, y: 0 });
+
+  // Optimization: useSpring for smooth performant updates without re-renders
+  const springConfig = { stiffness: 400, damping: 25 };
+  const noButtonX = useSpring(0, springConfig);
+  const noButtonY = useSpring(0, springConfig);
+  const [isNoButtonMoved, setIsNoButtonMoved] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const noButtonRef = useRef<HTMLButtonElement>(null);
@@ -205,9 +210,9 @@ export default function Valentine() {
     const maxX = window.innerWidth - rect.width - margin;
     const maxY = window.innerHeight - rect.height - margin;
 
-    // Move to a nearby position (not too far - feels like mis-tap)
-    const currentX = (noButtonPos.x === 0 && noButtonPos.y === 0) ? rect.left : noButtonPos.x;
-    const currentY = (noButtonPos.x === 0 && noButtonPos.y === 0) ? rect.top : noButtonPos.y;
+    // Use current MotionValue if moved, else use rect
+    const currentX = isNoButtonMoved ? noButtonX.get() : rect.left;
+    const currentY = isNoButtonMoved ? noButtonY.get() : rect.top;
 
     // Larger random offset (80-140px away) - more noticeable movement
     const offsetDistance = 80 + Math.random() * 60;
@@ -221,8 +226,13 @@ export default function Valentine() {
     newX = Math.min(Math.max(safeMargin, newX), window.innerWidth - rect.width - safeMargin);
     newY = Math.min(Math.max(safeMargin, newY), window.innerHeight - rect.height - safeMargin);
 
-    // Single state update - no loops, no delays
-    setNoButtonPos({ x: newX, y: newY });
+    // Direct update to spring values - handles animation automatically
+    noButtonX.set(newX);
+    noButtonY.set(newY);
+
+    if (!isNoButtonMoved) {
+      setIsNoButtonMoved(true);
+    }
   };
 
   const handleNoClick = (e: React.MouseEvent) => {
@@ -455,7 +465,7 @@ export default function Valentine() {
 
   // Proposal Page
   if (page === 'proposal') {
-    const isNoButtonMoved = noButtonPos.x !== 0 || noButtonPos.y !== 0;
+
 
     return (
       <div
@@ -692,10 +702,10 @@ export default function Valentine() {
             onClick={handleNoClick}
             onHoverStart={moveNoButton}
             onTouchStart={moveNoButton}
-            initial={{ x: noButtonPos.x, y: noButtonPos.y, scale: 0.5, opacity: 0 }}
-            animate={{ x: noButtonPos.x, y: noButtonPos.y, scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             style={{
+              x: noButtonX, y: noButtonY,
               padding: '0.9rem 2.25rem',
               background: 'rgba(255, 255, 255, 0.15)',
               border: '1px solid rgba(255, 255, 255, 0.25)',
@@ -1219,6 +1229,18 @@ export default function Valentine() {
               </div>
               <span className="mt-3 font-medium text-white/90 bg-black/20 px-3 py-1 rounded-full text-sm backdrop-blur-sm">Surprise Gift 3</span>
             </motion.button>
+          </div>
+
+          {/* Generate Your Own Link Button */}
+          <div className="mt-8 mb-12 animate-fadeIn" style={{ animationDelay: '1s' }}>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/40 rounded-full font-medium transition-all backdrop-blur-sm flex items-center gap-2 group hover:scale-105"
+            >
+              <span>✨</span>
+              <span>Create your own Valentine</span>
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </button>
           </div>
 
         </div>
