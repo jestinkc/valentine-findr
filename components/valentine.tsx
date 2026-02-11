@@ -17,8 +17,10 @@ export default function Valentine() {
 
   // Optimization: useSpring for smooth performant updates without re-renders
   const springConfig = { stiffness: 400, damping: 25 };
-  const noButtonX = useSpring(0, springConfig);
-  const noButtonY = useSpring(0, springConfig);
+  // defined as state to ensure re-render when switching to fixed positioning
+  const [noButtonPos, setNoButtonPos] = useState({ x: 0, y: 0 });
+  const [initialBtnPos, setInitialBtnPos] = useState({ x: 0, y: 0 });
+
   const [isNoButtonMoved, setIsNoButtonMoved] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -93,7 +95,7 @@ export default function Valentine() {
     // Check if we're on proposal page with valid params
     if (yourName && crushName && yourName.length >= 2 && crushName.length >= 2) {
       setPage('proposal');
-      setStage(1); // Start at stage 1
+      setStage(1); // Stage for progressive reveal
       document.body.style.overflow = 'hidden';
     } else if (yourName || crushName) {
       // Invalid params
@@ -203,36 +205,47 @@ export default function Valentine() {
     if (!noButtonRef.current) return;
 
     const button = noButtonRef.current;
-    const rect = button.getBoundingClientRect();
 
-    // Subtle movement - just enough to cause a "miss"
-    const margin = 40;
-    const maxX = window.innerWidth - rect.width - margin;
-    const maxY = window.innerHeight - rect.height - margin;
-
-    // Use current MotionValue if moved, else use rect
-    const currentX = isNoButtonMoved ? noButtonX.get() : rect.left;
-    const currentY = isNoButtonMoved ? noButtonY.get() : rect.top;
-
-    // Larger random offset (80-140px away) - more noticeable movement
-    const offsetDistance = 80 + Math.random() * 60;
-    const angle = Math.random() * Math.PI * 2;
-
-    let newX = currentX + Math.cos(angle) * offsetDistance;
-    let newY = currentY + Math.sin(angle) * offsetDistance;
-
-    // Keep within bounds - STRICTLY
-    const safeMargin = 20; // Safety margin from edges
-    newX = Math.min(Math.max(safeMargin, newX), window.innerWidth - rect.width - safeMargin);
-    newY = Math.min(Math.max(safeMargin, newY), window.innerHeight - rect.height - safeMargin);
-
-    // Direct update to spring values - handles animation automatically
-    noButtonX.set(newX);
-    noButtonY.set(newY);
+    // On first move, capture the static position
+    let currentX, currentY;
 
     if (!isNoButtonMoved) {
+      const rect = button.getBoundingClientRect();
+      currentX = rect.left;
+      currentY = rect.top;
+      setInitialBtnPos({ x: currentX, y: currentY });
       setIsNoButtonMoved(true);
+    } else {
+      // If already moved, use the current state position
+      currentX = noButtonPos.x;
+      currentY = noButtonPos.y;
     }
+
+    // Get button dimensions (might be fixed or static, dimensions should be same)
+    const width = button.offsetWidth;
+    const height = button.offsetHeight;
+
+    // Boundary calculations
+    const margin = 40;
+
+    // Choose a random direction (angle)
+    const angle = Math.random() * Math.PI * 2;
+    // Distance to jump
+    const distance = 100 + Math.random() * 100; // 100-200px jump
+
+    let newX = currentX + Math.cos(angle) * distance;
+    let newY = currentY + Math.sin(angle) * distance;
+
+    // Keep within viewport bounds with padding
+    const safePadding = 20;
+    const maxX = window.innerWidth - width - safePadding;
+    const maxY = window.innerHeight - height - safePadding;
+
+    // Clamp values
+    newX = Math.min(Math.max(safePadding, newX), maxX);
+    newY = Math.min(Math.max(safePadding, newY), maxY);
+
+    setNoButtonPos({ x: newX, y: newY });
   };
 
   const handleNoClick = (e: React.MouseEvent) => {
@@ -702,10 +715,10 @@ export default function Valentine() {
             onClick={handleNoClick}
             onHoverStart={moveNoButton}
             onTouchStart={moveNoButton}
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ x: initialBtnPos.x, y: initialBtnPos.y }}
+            animate={{ x: noButtonPos.x, y: noButtonPos.y }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
             style={{
-              x: noButtonX, y: noButtonY,
               padding: '0.9rem 2.25rem',
               background: 'rgba(255, 255, 255, 0.15)',
               border: '1px solid rgba(255, 255, 255, 0.25)',
