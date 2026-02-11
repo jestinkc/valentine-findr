@@ -1130,8 +1130,8 @@ export default function Valentine() {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", duration: 1, delay: 0.5 }}
-            className="mb-8 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/30"
-            style={{ maxWidth: '300px' }}
+            className="mb-8 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/30 w-full max-w-[240px] md:max-w-[300px]"
+            style={{}}
           >
             <img
               src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDdtZ2JiZDR0a3B0YnhzbmZ0Zzh4YnhzbmZ0Zzh4YnhzbmZ0Zzh4YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26BRv0ThflsHCqDrG/giphy.gif"
